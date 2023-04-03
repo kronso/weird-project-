@@ -131,23 +131,24 @@ void printPositions(vector<Positions> &pos) {
 void connectHorizontal(Positions head, Positions tail) {
     unsigned x_begin = head.x_dot + 1, x_end = tail.x_dot;
     for (; x_begin < x_end; x_begin++) {
-        grid[head.y_dot][x_begin] = '#';
+        grid[head.y_dot][x_begin] = '_';
     }
 }
 
 void connectVertical(Positions head, Positions tail) {
     unsigned y_begin = head.y_dot + 1, y_end = tail.y_dot;
     for (; y_begin < y_end; y_begin++) {
-        grid[y_begin][head.x_dot] = '#';
+        grid[y_begin][head.x_dot] = '|';
     }
     
 }
 
 void findConnects(vector<Positions> &pos) {
-    vector<Positions>::iterator i = pos.begin();
-    vector<Positions>::iterator j = pos.begin();
-    for (; i != pos.end(); ++i) {
-        for (; j != pos.end(); ++j) {
+
+    vector<Positions>::iterator i;
+    vector<Positions>::iterator j;
+    for (i = pos.begin(); i != pos.end(); ++i) {
+        for (j = pos.begin(); j != pos.end(); ++j) {
             if ((*i).y_dot == (*j).y_dot) { // points are on the same row
                 if ((*i).x_dot < (*j).x_dot) {
                     connectHorizontal(*i, *j);
