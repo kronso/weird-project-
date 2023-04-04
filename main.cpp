@@ -7,8 +7,8 @@ using std::vector;
 #define BACKSPACE 8
 #define SPACEBAR 32
 // size of grid
-#define HEIGHT 10
-#define WIDTH 10
+#define HEIGHT 20
+#define WIDTH 20
 // colours
 #define CURS_COLOUR "\033[38;5;49m"
 #define BLACK_FG "\033[38;5;235m"
@@ -129,35 +129,65 @@ void printPositions(vector<Positions> &pos) {
 }
 
 void connectHorizontal(Positions head, Positions tail) {
-    unsigned x_begin = head.x_dot + 1, x_end = tail.x_dot;
+    // + 1 so it doesn't print on the edge 'X'
+    unsigned x_begin = head.x_dot, x_end = tail.x_dot;
     for (; x_begin < x_end; x_begin++) {
-        grid[head.y_dot][x_begin] = '_';
+        if (grid[head.y_dot][x_begin] == 'X') { continue; } 
+        grid[head.y_dot][x_begin] = '-';
     }
 }
-
 void connectVertical(Positions head, Positions tail) {
-    unsigned y_begin = head.y_dot + 1, y_end = tail.y_dot;
+    // + 1 so it doesn't print on the edge 'X'
+    unsigned y_begin = head.y_dot, y_end = tail.y_dot;
     for (; y_begin < y_end; y_begin++) {
+        if (grid[y_begin][head.x_dot] == 'X') { continue; }
         grid[y_begin][head.x_dot] = '|';
     }
     
 }
+void connectDiagonals(Positions head, Positions tail, int a = 1, int b = 1) {
+    unsigned int y_head = head.y_dot, x_head = head.x_dot;
+    unsigned int y_tail = tail.y_dot, x_tail = tail.x_dot;
+    for (; (y_head < y_tail || x_head < x_tail); y_head += a, x_head += b) { 
+        if (grid[y_head][x_head] == 'X') { continue; } // doesn't place on top of 'X'
+        if (a > 0) { 
+            grid[y_head][x_head] = '\\'; 
+        } else { 
+            grid[y_head][x_head] = '/';
+        }
+    }
+}
 
 void findConnects(vector<Positions> &pos) {
-
     vector<Positions>::iterator i;
     vector<Positions>::iterator j;
     for (i = pos.begin(); i != pos.end(); ++i) {
         for (j = pos.begin(); j != pos.end(); ++j) {
+            // *i and *j are the struct 'Positions' 
             if ((*i).y_dot == (*j).y_dot) { // points are on the same row
                 if ((*i).x_dot < (*j).x_dot) {
                     connectHorizontal(*i, *j);
                 } else { connectHorizontal(*j, *i); }
             }
-            if ((*i).x_dot == (*j).x_dot) { // points are on the same column
+            if ((*i).x_dot == (*j).x_dot) { // points are on the same columnw
                 if ((*i).y_dot < (*j).y_dot) {
                     connectVertical(*i, *j);
                 } else { connectVertical(*j, *i); }
+            }
+
+            for (int step = 0; step < HEIGHT; step++) {
+                // point to top-left and bottom-right
+                if ((*i).y_dot == (*j).y_dot - step && (*i).x_dot == (*j).x_dot - step) {
+                    if ((*i).y_dot < (*j).y_dot && (*i).x_dot < (*j).x_dot) {
+                        connectDiagonals(*i, *j);
+                    } else { connectDiagonals(*j, *i); }
+                }
+                // point to top-right and bottom-left
+                if ((*i).y_dot == (*j).y_dot - step && (*i).x_dot == (*j).x_dot + step) {
+                    if ((*i).y_dot < (*j).y_dot && (*i).x_dot < (*j).x_dot) {
+                        connectDiagonals(*i, *j, -1);
+                    } else { connectDiagonals(*j, *i, -1); }
+                }
             }
         }
     }
@@ -168,12 +198,11 @@ int main() {
     initGrid();
     while (!connect_dots) {
         findPositions(pos);
+        findConnects(pos);
         printGrid();
         printPositions(pos); // just to test
         moveCursor();
     }
-    findConnects(pos);
-    printGrid();
 
     return EXIT_SUCCESS;
 }
